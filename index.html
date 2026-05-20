@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#060d18"/>
+<title>Areco Rugby Stats</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap');
+
+  :root {
+    --green-dark: #0a1628;
+    --green-mid: #1a2e4a;
+    --green-bright: #c0392b;
+    --green-light: #e85d52;
+    --gold: #e8e8f0;
+    --gold-light: #ffffff;
+    --white: #f4f0e8;
+    --gray: #a89f8c;
+    --red: #d94f3d;
+    --yellow: #e8b84b;
+    --bg: #060d18;
+    --card-bg: #0c1a2e;
+    --card-border: #1e3050;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--white);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+  }
+
+  /* HEADER */
+  .app-header {
+    background: #0a1628;
+    border-bottom: 1px solid var(--card-border);
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-logo {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--gold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .app-logo span { color: #6aaee8; }
+
+  /* SCREENS */
+  .screen { display: none; padding: 16px; }
+  .screen.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 8px;
+  }
+
+  /* FORM ELEMENTS */
+  select, input[type="text"], input[type="date"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: var(--font);
+    font-size: 15px;
+    padding: 11px 12px;
+    margin-bottom: 10px;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+  }
+  select:focus, input:focus { border-color: #2a6cb5; }
+  select option { background: #060d18; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: transparent;
+    color: var(--white);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: #2a6cb5; border-color: #2a6cb5; color: #fff; }
+  .btn-primary:active { background: #1a3a6a; }
+  .btn-gold { background: #e85d52; border-color: #e85d52; color: #ffffff; font-weight: 700; }
+  .btn-danger { background: transparent; border-color: var(--red); color: var(--red); }
+  .btn-sm { padding: 7px 12px; font-size: 13px; }
+  .btn-full { width: 100%; }
+  .btn-ghost { border-color: transparent; color: var(--gray); }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 16px;
+  }
+  .score-num {
+    font-family: var(--mono);
+    font-size: 52px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--white);
+  }
+  .score-num.areco-color { color: #e85d52; }
+  .score-vs { font-family: var(--mono); font-size: 18px; color: var(--gray); }
+  .score-team { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gray); margin-top: 4px; }
+
+  /* TIMER */
+  .timer-big {
+    font-family: var(--mono);
+    font-size: 48px;
+    font-weight: 500;
+    text-align: center;
+    color: var(--gold);
+    letter-spacing: 4px;
+    padding: 10px 0 6px;
+  }
+  .timer-big.running { color: #6aaee8; }
+
+  /* TOGGLE GRID (team, result, zone) */
+  .toggle-grid {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .toggle-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .toggle-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .toggle-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+  .tog {
+    padding: 10px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--bg);
+    color: var(--gray);
+    font-family: var(--font);
+    font-size: 13px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.12s;
+    line-height: 1.3;
+  }
+  .tog:active { transform: scale(0.95); }
+  .tog.sel-areco { background: #1a1a2e; border-color: #e85d52; color: var(--white); font-weight: 500; }
+  .tog.sel-rival { background: #3a1a10; border-color: var(--red); color: #f08070; font-weight: 500; }
+  .tog.sel-verde { background: #0d1a2e; border-color: #2a6cb5; color: #e85d52; font-weight: 500; }
+  .tog.sel-amarillo { background: #2e2208; border-color: var(--gold); color: var(--gold-light); font-weight: 500; }
+  .tog.sel-rojo { background: #3a1010; border-color: var(--red); color: #f08070; font-weight: 500; }
+  .tog.sel-zona { background: #0d1a2e; border-color: #2a6cb5; color: #6aaee8; font-weight: 500; }
+  .tog.sel-action { background: #1a1520; border-color: #e85d52; color: #ffffff; font-weight: 500; }
+
+  /* ACTIONS GRID */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  /* LOG */
+  .log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--card-border);
+    font-size: 13px;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--gray);
+    min-width: 38px;
+    padding-top: 1px;
+  }
+  .log-team-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    padding-top: 3px;
+  }
+  .badge-areco { background: #1a1a2e; color: #e85d52; }
+  .badge-rival { background: #3a1a10; color: #f08070; }
+  .log-body { flex: 1; }
+  .log-action { font-weight: 500; color: var(--white); }
+  .log-zone { font-size: 11px; color: var(--gray); }
+  .dot-verde { color: #e85d52; }
+  .dot-amarillo { color: var(--gold-light); }
+  .dot-rojo { color: #f08070; }
+
+  /* STATS */
+  .stat-bar-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 32px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .stat-label { font-size: 11px; color: var(--gray); text-align: center; }
+  .stat-bars { display: flex; height: 6px; border-radius: 3px; overflow: hidden; gap: 2px; align-items: center; }
+  .bar-areco { background: #e85d52; border-radius: 3px; height: 6px; transition: width 0.4s; }
+  .bar-rival { background: #d94f3d; border-radius: 3px; height: 6px; transition: width 0.4s; }
+  .bar-mid { width: 2px; background: var(--card-border); flex-shrink: 0; height: 100%; }
+
+  .zone-map {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    height: 64px;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .zone-cell {
+    border-right: 1px solid var(--card-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--gray);
+    gap: 2px;
+    transition: background 0.3s;
+  }
+  .zone-cell:last-child { border-right: none; }
+  .zone-count-big { font-family: var(--mono); font-size: 20px; color: var(--white); }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--card-border); margin-bottom: 12px; }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 4px;
+    font-size: 13px;
+    color: var(--gray);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .tab-btn.active { color: #e85d52; border-bottom-color: #e85d52; }
+
+  /* HISTORY */
+  .history-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-score { font-family: var(--mono); font-size: 18px; font-weight: 500; }
+  .history-meta { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+  /* MISC */
+  .empty { text-align: center; padding: 24px; color: var(--gray); font-size: 14px; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .msg-error { font-size: 12px; color: var(--red); margin-top: 6px; display: none; }
+  .divider { height: 1px; background: var(--card-border); margin: 8px 0; }
+  .match-header-info { font-size: 12px; color: var(--gray); }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .pill-win { background: #0d1a2e; color: var(--green-light); }
+  .pill-loss { background: #3a1010; color: #f08070; }
+  .pill-draw { background: #2e2208; color: var(--gold-light); }
+
+  .nav-footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--green-dark);
+    border-top: 1px solid var(--card-border);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 12px 4px 10px;
+    background: transparent;
+    border: none;
+    color: var(--gray);
+    font-family: var(--font);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.15s;
+  }
+  .nav-btn .nav-icon { font-size: 20px; }
+  .nav-btn.active { color: #e85d52; }
+  body { padding-bottom: 70px; }
+
+  .recording-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    display: inline-block;
+    margin-right: 4px;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-logo" style="color:#ffffff">ARECO <span style="color:#6aaee8">Rugby</span></div>
+  <div id="header-right" style="font-family:var(--mono);font-size:13px;color:var(--gray)"></div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-footer" id="main-nav" style="display:none">
+  <button class="nav-btn active" id="nav-partido" onclick="navTo('partido')">
+    <span class="nav-icon">🏉</span>Partido
+  </button>
+  <button class="nav-btn" id="nav-stats" onclick="navTo('stats')">
+    <span class="nav-icon">📊</span>Stats
+  </button>
+  <button class="nav-btn" id="nav-historial" onclick="navTo('historial')">
+    <span class="nav-icon">📋</span>Historial
+  </button>
+</nav>
+
+<!-- ===== SCREEN: CONFIG ===== -->
+<div class="screen active" id="screen-config">
+  <div style="padding: 24px 0 16px; text-align: center;">
+    <div style="font-size: 32px; margin-bottom: 8px;">🏉</div>
+    <div style="font-family: var(--mono); font-size: 22px; font-weight: 500; color: #e85d52; letter-spacing: 2px;">ARECO RUGBY</div>
+    <div style="font-size: 13px; color: var(--gray); margin-top: 4px;">Sistema de estadísticas</div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Categoría</div>
+    <select id="cfg-cat">
+      <option>PS Primera</option>
+      <option>PS Inter</option>
+      <option>PS Pre</option>
+      <option>M 19 A</option>
+      <option>M 19 B</option>
+      <option>M 17</option>
+      <option>M 16</option>
+      <option>M 15</option>
+      
+      
+      
+      
+      
+      
+    </select>
+    <div class="section-label">Rival</div>
+    <input id="cfg-rival" type="text" placeholder="Nombre del equipo rival"/>
+    <div class="section-label">Fecha</div>
+    <input id="cfg-fecha" type="date"/>
+  </div>
+
+  <button class="btn btn-gold btn-full" onclick="startMatch()" style="font-size:16px; padding:14px; background:#c0392b; border-color:#c0392b; color:#fff;">
+    ▶ INICIAR PARTIDO
+  </button>
+
+  <div id="has-history-btn" style="margin-top:10px; display:none">
+    <button class="btn btn-full btn-ghost" onclick="navTo('historial'); showMainNav()">
+      Ver historial de partidos
+    </button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: PARTIDO ===== -->
+<div class="screen" id="screen-partido">
+
+  <div class="card" style="padding:0">
+    <div class="scoreboard">
+      <div>
+        <div class="score-num areco-color" id="score-areco">0</div>
+        <div class="score-team">ARECO</div>
+      </div>
+      <div class="score-vs">VS</div>
+      <div>
+        <div class="score-num" id="score-rival">0</div>
+        <div class="score-team" id="score-rival-name">RIVAL</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="timer-big" id="timer-display">00:00</div>
+    <div class="row" style="margin-top:10px; gap:8px">
+      <button class="btn btn-primary" id="btn-timer" onclick="toggleTimer()">▶ Iniciar</button>
+      <button class="btn btn-sm" onclick="resetTimer()">↺ Reset</button>
+      <button class="btn btn-sm btn-ghost" onclick="setHalfTime()">½ T</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Equipo</div>
+    <div class="toggle-grid cols-2" style="margin-bottom:14px">
+      <div class="tog" id="tog-areco" onclick="selectTeam('Areco')">🟢 Areco</div>
+      <div class="tog" id="tog-rival" onclick="selectTeam('Rival')" id="tog-rival-label">🔴 Rival</div>
+    </div>
+
+    <div class="section-label">Acción</div>
+    <div class="actions-grid">
+      <div class="tog" onclick="selectAction(this,'Tackle')">Tackle</div>
+      <div class="tog" onclick="selectAction(this,'Try')">🏉 Try (+5)</div>
+      <div class="tog" onclick="selectAction(this,'Try convertido')">🏉 Try conv. (+7)</div>
+      <div class="tog" onclick="selectAction(this,'Penal convertido')">Penal conv. (+3)</div>
+      <div class="tog" onclick="selectAction(this,'Line')">Line</div>
+      <div class="tog" onclick="selectAction(this,'Scrum')">Scrum</div>
+      <div class="tog" onclick="selectAction(this,'Penal en contra')">Penal en contra</div>
+      <div class="tog" onclick="selectAction(this,'Ruck ganado')">Ruck ganado</div>
+      <div class="tog" onclick="selectAction(this,'Ruck perdido')">Ruck perdido</div>
+    </div>
+
+    <div class="section-label">Resultado de la acción</div>
+    <div class="toggle-grid cols-3" style="margin-bottom:14px">
+      <div class="tog" onclick="selectResult('verde',this)">🟢 Verde</div>
+      <div class="tog" onclick="selectResult('amarillo',this)">🟡 Amarillo</div>
+      <div class="tog" onclick="selectResult('rojo',this)">🔴 Rojo</div>
+    </div>
+
+    <div class="section-label">Zona de la cancha</div>
+    <div class="toggle-grid cols-5" style="margin-bottom:14px">
+      <div class="tog" style="font-size:11px;padding:8px 3px" onclick="selectZona(this,'Plena def.')">Plena def.</div>
+      <div class="tog" style="font-size:11px;padding:8px 3px" onclick="selectZona(this,'Defensa')">Defensa</div>
+      <div class="tog" style="font-size:11px;padding:8px 3px" onclick="selectZona(this,'Mitad')">Mitad</div>
+      <div class="tog" style="font-size:11px;padding:8px 3px" onclick="selectZona(this,'Ataque')">Ataque</div>
+      <div class="tog" style="font-size:11px;padding:8px 3px" onclick="selectZona(this,'Pleno ataque')">Pleno at.</div>
+    </div>
+
+    <div id="reg-error" class="msg-error">⚠ Seleccioná equipo y acción</div>
+    <button class="btn btn-primary btn-full" onclick="logAction()" style="padding:13px;font-size:15px">
+      + Registrar acción
+    </button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-label" style="margin:0">Acciones del partido</div>
+      <span id="action-count" style="font-family:var(--mono);font-size:12px;color:var(--gray)">0</span>
+    </div>
+    <div id="action-log"><div class="empty">Sin acciones aún</div></div>
+  </div>
+
+  <div class="divider"></div>
+  <button class="btn btn-danger btn-full" onclick="endMatch()">■ Finalizar partido</button>
+</div>
+
+<!-- ===== SCREEN: STATS ===== -->
+<div class="screen" id="screen-stats">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-resumen',this)">Resumen</button>
+    <button class="tab-btn" onclick="switchTab('tab-acciones',this)">Acciones</button>
+    <button class="tab-btn" onclick="switchTab('tab-timeline',this)">Timeline</button>
+  </div>
+
+  <div id="tab-resumen">
+    <div class="card" style="padding:0">
+      <div class="scoreboard">
+        <div>
+          <div class="score-num areco-color" id="stat-score-areco">0</div>
+          <div class="score-team">ARECO</div>
+        </div>
+        <div class="score-vs">VS</div>
+        <div>
+          <div class="score-num" id="stat-score-rival">0</div>
+          <div class="score-team" id="stat-rival-name">RIVAL</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-label">Zonas de la cancha</div>
+      <div class="zone-map" id="zone-map"></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray);margin-top:-8px;margin-bottom:10px;padding:0 2px">
+        <span>← DEFENSA</span><span>ATAQUE →</span>
+      </div>
+      <div class="section-label">Resultados globales</div>
+      <div id="result-summary"></div>
+    </div>
+  </div>
+
+  <div id="tab-acciones" style="display:none">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray);margin-bottom:8px">
+        <span style="color:#e85d52">◀ ARECO</span>
+        <span style="color:#f08070">RIVAL ▶</span>
+      </div>
+      <div id="actions-comparison"></div>
+    </div>
+  </div>
+
+  <div id="tab-timeline" style="display:none">
+    <div class="card" id="timeline-log"></div>
+  </div>
+
+  <button class="btn btn-gold btn-full" onclick="exportData()" style="margin-bottom:8px">
+    ⬇ Exportar datos del partido
+  </button>
+</div>
+
+<!-- ===== SCREEN: HISTORIAL ===== -->
+<div class="screen" id="screen-historial">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="font-size:16px;font-weight:500">Historial</div>
+    <button class="btn btn-sm" onclick="exportAllData()">⬇ Exportar todo</button>
+  </div>
+  <div id="historial-list"></div>
+</div>
+
+<script>
+// ===== STATE =====
+let timerInterval = null;
+let seconds = 0;
+let running = false;
+let actions = [];
+let matchData = {};
+let sel = { team: null, action: null, result: null, zona: null };
+let currentScreen = 'config';
+let matchActive = false;
+
+// ===== LOCAL STORAGE =====
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('areco_history') || '[]'); } catch(e) { return []; }
+}
+function saveHistory(h) {
+  try { localStorage.setItem('areco_history', JSON.stringify(h)); } catch(e) {}
+}
+
+// ===== INIT =====
+window.onload = function() {
+  document.getElementById('cfg-fecha').value = new Date().toISOString().split('T')[0];
+  const h = getHistory();
+  if (h.length > 0) document.getElementById('has-history-btn').style.display = 'block';
+  renderHistorial();
+};
+
+// ===== NAV =====
+function showMainNav() {
+  document.getElementById('main-nav').style.display = 'flex';
+}
+function navTo(tab) {
+  ['partido','stats','historial'].forEach(t => {
+    document.getElementById('screen-' + (t === 'partido' ? 'partido' : t)).classList.remove('active');
+    document.getElementById('nav-' + t)?.classList.remove('active');
+  });
+  if (tab === 'partido') document.getElementById('screen-partido').classList.add('active');
+  else if (tab === 'stats') { buildStats(); document.getElementById('screen-stats').classList.add('active'); }
+  else { renderHistorial(); document.getElementById('screen-historial').classList.add('active'); }
+  document.getElementById('nav-' + tab)?.classList.add('active');
+}
+
+// ===== MATCH =====
+function startMatch() {
+  const rival = document.getElementById('cfg-rival').value.trim() || 'Rival';
+  const cat = document.getElementById('cfg-cat').value;
+  const fecha = document.getElementById('cfg-fecha').value;
+  matchData = { rival, cat, fecha, startTs: Date.now() };
+  document.getElementById('score-rival-name').textContent = rival.toUpperCase();
+  document.getElementById('stat-rival-name').textContent = rival.toUpperCase();
+  document.getElementById('tog-rival').textContent = '🔴 ' + rival;
+  document.getElementById('score-areco').textContent = '0';
+  document.getElementById('score-rival').textContent = '0';
+  document.getElementById('header-right').innerHTML = '<span class="recording-dot"></span>' + cat;
+  actions = [];
+  seconds = 0; running = false;
+  updateTimer(); updateLog();
+  sel = { team: null, action: null, result: null, zona: null };
+  matchActive = true;
+  document.getElementById('screen-config').classList.remove('active');
+  showMainNav();
+  navTo('partido');
+}
+
+function endMatch() {
+  if (!confirm('¿Finalizar el partido y guardar en el historial?')) return;
+  clearInterval(timerInterval); running = false;
+  const result = {
+    id: Date.now(),
+    ...matchData,
+    scoreAreco: parseInt(document.getElementById('score-areco').textContent),
+    scoreRival: parseInt(document.getElementById('score-rival').textContent),
+    duration: seconds,
+    actions: [...actions]
+  };
+  const h = getHistory();
+  h.unshift(result);
+  saveHistory(h);
+  matchActive = false;
+  document.getElementById('main-nav').style.display = 'none';
+  document.getElementById('header-right').innerHTML = '';
+  document.getElementById('screen-partido').classList.remove('active');
+  document.getElementById('has-history-btn').style.display = 'block';
+  document.getElementById('screen-config').classList.add('active');
+  clearInterval(timerInterval);
+  alert('¡Partido guardado! Podés verlo en el historial.');
+}
+
+// ===== TIMER =====
+function toggleTimer() {
+  if (running) {
+    clearInterval(timerInterval); running = false;
+    document.getElementById('btn-timer').textContent = '▶ Reanudar';
+    document.getElementById('timer-display').classList.remove('running');
+  } else {
+    timerInterval = setInterval(() => { seconds++; updateTimer(); }, 1000);
+    running = true;
+    document.getElementById('btn-timer').textContent = '⏸ Pausar';
+    document.getElementById('timer-display').classList.add('running');
+  }
+}
+function resetTimer() { clearInterval(timerInterval); running = false; seconds = 0; updateTimer(); document.getElementById('btn-timer').textContent = '▶ Iniciar'; document.getElementById('timer-display').classList.remove('running'); }
+function setHalfTime() { seconds = 40 * 60; updateTimer(); }
+function updateTimer() {
+  const m = Math.floor(seconds / 60), s = seconds % 60;
+  document.getElementById('timer-display').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function formatTime(s) { return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); }
+
+// ===== SELECTION =====
+function selectTeam(t) {
+  sel.team = t;
+  document.getElementById('tog-areco').className = 'tog' + (t==='Areco' ? ' sel-areco' : '');
+  document.getElementById('tog-rival').className = 'tog' + (t==='Rival' ? ' sel-rival' : '');
+}
+function selectAction(el, a) {
+  sel.action = a;
+  document.querySelectorAll('.actions-grid .tog').forEach(b => b.className = 'tog');
+  el.className = 'tog sel-action';
+}
+function selectResult(r, el) {
+  sel.result = r;
+  document.querySelectorAll('.toggle-grid .tog[onclick*="selectResult"]').forEach(b => b.className = 'tog');
+  el.className = 'tog sel-' + r;
+}
+function selectZona(el, z) {
+  sel.zona = z;
+  document.querySelectorAll('.toggle-grid .tog[onclick*="selectZona"]').forEach(b => { b.className = 'tog'; b.style.fontSize='11px'; b.style.padding='8px 3px'; });
+  el.className = 'tog sel-zona'; el.style.fontSize='11px'; el.style.padding='8px 3px';
+}
+
+// ===== LOG ACTION =====
+function logAction() {
+  const err = document.getElementById('reg-error');
+  if (!sel.team || !sel.action) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  const entry = { team: sel.team, action: sel.action, result: sel.result, zona: sel.zona, time: seconds, ts: Date.now() };
+  actions.push(entry);
+  if (sel.action === 'Try') addScore(sel.team === 'Areco' ? 'areco' : 'rival', 5);
+  if (sel.action === 'Try convertido') addScore(sel.team === 'Areco' ? 'areco' : 'rival', 7);
+  if (sel.action === 'Penal convertido') addScore(sel.team === 'Areco' ? 'areco' : 'rival', 3);
+  updateLog();
+  sel = { team: null, action: null, result: null, zona: null };
+  document.querySelectorAll('.tog').forEach(b => { b.className = 'tog'; if(b.style.fontSize) { b.style.fontSize='11px'; b.style.padding='8px 3px'; }});
+  document.getElementById('tog-areco').className = 'tog';
+  document.getElementById('tog-rival').className = 'tog';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function addScore(team, pts) {
+  const el = document.getElementById('score-' + team);
+  el.textContent = parseInt(el.textContent) + pts;
+}
+
+// ===== RENDER LOG =====
+function updateLog() {
+  const el = document.getElementById('action-log');
+  document.getElementById('action-count').textContent = actions.length;
+  if (actions.length === 0) { el.innerHTML = '<div class="empty">Sin acciones aún</div>'; return; }
+  el.innerHTML = [...actions].reverse().map(a => `
+    <div class="log-entry">
+      <span class="log-time">${formatTime(a.time)}</span>
+      <span class="log-team-badge ${a.team==='Areco'?'badge-areco':'badge-rival'}">${a.team==='Areco'?'ARQ':matchData.rival?.substring(0,3).toUpperCase()||'RIV'}</span>
+      <div class="log-body">
+        <div class="log-action">${a.action}</div>
+        <div class="log-zone">${a.zona}</div>
+      </div>
+      <span class="dot-${a.result}">●</span>
+    </div>`).join('');
+}
+
+// ===== STATS =====
+function buildStats() {
+  document.getElementById('stat-score-areco').textContent = document.getElementById('score-areco').textContent;
+  document.getElementById('stat-score-rival').textContent = document.getElementById('score-rival').textContent;
+  const zones = ['Plena def.','Defensa','Mitad','Ataque','Pleno ataque'];
+  const zoneCounts = zones.map(z => actions.filter(a => a.zona === z).length);
+  const maxZ = Math.max(...zoneCounts, 1);
+  document.getElementById('zone-map').innerHTML = zones.map((z, i) => {
+    const c = zoneCounts[i];
+    const intensity = Math.round((c / maxZ) * 40);
+    return `<div class="zone-cell" style="background:rgba(42,108,181,${intensity/100})">
+      <span class="zone-count-big">${c}</span>
+      <span>${z}</span>
+    </div>`;
+  }).join('');
+
+  const tot = actions.length || 1;
+  const v = actions.filter(a => a.result === 'verde').length;
+  const am = actions.filter(a => a.result === 'amarillo').length;
+  const ro = actions.filter(a => a.result === 'rojo').length;
+  document.getElementById('result-summary').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+      <div style="padding:10px;background:#0d2010;border-radius:8px">
+        <div style="font-family:var(--mono);font-size:22px;color:#6dce90">${v}</div>
+        <div style="font-size:11px;color:var(--gray)">Verde (${Math.round(v/tot*100)}%)</div>
+      </div>
+      <div style="padding:10px;background:#2e2208;border-radius:8px">
+        <div style="font-family:var(--mono);font-size:22px;color:var(--gold-light)">${am}</div>
+        <div style="font-size:11px;color:var(--gray)">Amarillo (${Math.round(am/tot*100)}%)</div>
+      </div>
+      <div style="padding:10px;background:#3a1010;border-radius:8px">
+        <div style="font-family:var(--mono);font-size:22px;color:#f08070">${ro}</div>
+        <div style="font-size:11px;color:var(--gray)">Rojo (${Math.round(ro/tot*100)}%)</div>
+      </div>
+    </div>`;
+
+  const actionNames = ['Tackle','Try','Try convertido','Penal convertido','Line','Scrum','Penal en contra','Ruck ganado','Ruck perdido'];
+  const compEl = document.getElementById('actions-comparison');
+  compEl.innerHTML = actionNames.map(name => {
+    const a = actions.filter(x => x.action === name && x.team === 'Areco').length;
+    const r = actions.filter(x => x.action === name && x.team === 'Rival').length;
+    const max = Math.max(a, r, 1);
+    const aw = Math.round(a / max * 45);
+    const rw = Math.round(r / max * 45);
+    return `<div class="stat-bar-row">
+      <div class="stat-label" style="color:#e85d52;font-family:var(--mono)">${a}</div>
+      <div>
+        <div style="font-size:11px;color:var(--gray);text-align:center;margin-bottom:4px">${name}</div>
+        <div style="display:flex;height:6px;gap:2px">
+          <div style="flex:1;display:flex;justify-content:flex-end"><div class="bar-areco" style="width:${aw}%"></div></div>
+          <div style="width:2px;background:var(--card-border);flex-shrink:0"></div>
+          <div style="flex:1"><div class="bar-rival" style="width:${rw}%"></div></div>
+        </div>
+      </div>
+      <div class="stat-label" style="color:#f08070;font-family:var(--mono)">${r}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('timeline-log').innerHTML = actions.length === 0
+    ? '<div class="empty">Sin acciones registradas</div>'
+    : [...actions].reverse().map(a => `
+      <div class="log-entry">
+        <span class="log-time">${formatTime(a.time)}</span>
+        <span class="log-team-badge ${a.team==='Areco'?'badge-areco':'badge-rival'}">${a.team==='Areco'?'ARQ':matchData.rival?.substring(0,3).toUpperCase()||'RIV'}</span>
+        <div class="log-body">
+          <div class="log-action">${a.action}</div>
+          <div class="log-zone">${a.zona}</div>
+        </div>
+        <span class="dot-${a.result}">●</span>
+      </div>`).join('');
+}
+
+function switchTab(tabId, el) {
+  ['tab-resumen','tab-acciones','tab-timeline'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).style.display = 'block';
+  el.classList.add('active');
+}
+
+// ===== HISTORIAL =====
+function deleteMatch(idx) {
+  if (!confirm('¿Borrar este partido del historial?')) return;
+  const h = getHistory();
+  h.splice(idx, 1);
+  saveHistory(h);
+  renderHistorial();
+}
+
+function renderHistorial() {
+  const h = getHistory();
+  const el = document.getElementById('historial-list');
+  if (h.length === 0) { el.innerHTML = '<div class="empty">Sin partidos guardados</div>'; return; }
+  el.innerHTML = h.map((m, i) => {
+    const res = m.scoreAreco > m.scoreRival ? 'win' : m.scoreAreco < m.scoreRival ? 'loss' : 'draw';
+    const label = res === 'win' ? 'Victoria' : res === 'loss' ? 'Derrota' : 'Empate';
+    return `<div class="card" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:500;font-size:15px">Areco vs ${m.rival}</div>
+          <div class="history-meta">${m.cat} · ${m.fecha || ''}</div>
+        </div>
+        <span class="pill pill-${res}">${label}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+        <div class="history-score" style="color:#e85d52">${m.scoreAreco}</div>
+        <div style="color:var(--gray);font-size:13px">—</div>
+        <div class="history-score">${m.scoreRival}</div>
+        <div style="font-size:12px;color:var(--gray);margin-left:4px">${m.actions?.length || 0} acc. · ${formatTime(m.duration||0)}</div>
+        <button class="btn btn-sm" style="margin-left:auto" onclick="exportMatch(${i})">⬇</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMatch(${i})" style="padding:7px 10px">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== EXPORT =====
+function buildCSV(match) {
+  const rows = [['Tiempo','Equipo','Acción','Resultado','Zona']];
+  (match.actions || []).forEach(a => rows.push([formatTime(a.time), a.team, a.action, a.result, a.zona]));
+  rows.unshift([`Areco ${match.scoreAreco} - ${match.scoreRival} ${match.rival}`, match.cat, match.fecha, '', '']);
+  return rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+}
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportData() {
+  const rival = matchData.rival || 'rival';
+  const fecha = matchData.fecha || new Date().toISOString().split('T')[0];
+  const csv = buildCSV({ ...matchData, scoreAreco: parseInt(document.getElementById('score-areco').textContent), scoreRival: parseInt(document.getElementById('score-rival').textContent), actions });
+  downloadFile(csv, `areco_vs_${rival}_${fecha}.csv`, 'text/csv');
+}
+
+function exportMatch(idx) {
+  const h = getHistory();
+  const m = h[idx];
+  downloadFile(buildCSV(m), `areco_vs_${m.rival}_${m.fecha}.csv`, 'text/csv');
+}
+
+function exportAllData() {
+  const h = getHistory();
+  downloadFile(JSON.stringify(h, null, 2), `areco_rugby_historial.json`, 'application/json');
+}
+</script>
+</body>
+</html>
